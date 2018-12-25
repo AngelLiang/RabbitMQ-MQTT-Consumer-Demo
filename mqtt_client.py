@@ -10,13 +10,13 @@ except Exception:
 
 MQTT_HOST = "127.0.0.1"
 MQTT_PORT = 1883
-MQTT_CLIENT_ID = "python_mqtt_client"
-MQTT_USERNAME = "guest"
-MQTT_PASSWORD = "guest"
+MQTT_CLIENT_ID = 'python_mqtt_client'
+MQTT_USERNAME = 'guest'
+MQTT_PASSWORD = 'guest'
 MQTT_KEEPALIVE = 120
 
-MQTT_SUB_TOPIC = "hello"
-MQTT_PUB_TOPIC = 'update'
+MQTT_SUB_TOPIC = '/get'
+MQTT_PUB_TOPIC = '/update'
 MQTT_SUB_QOS = 1
 
 
@@ -31,7 +31,7 @@ def on_message(client, userdata, msg):
     topic = msg.topic
     payload = msg.payload.decode()
     print('[topic]:' + topic)
-    print("[payload]:" + str(payload))
+    print('[payload]:' + str(payload))
 
 
 def input_work():
