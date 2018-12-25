@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 pika = "*"
 paho-mqtt = "*"
+pymongo = "*"
 
 [dev-packages]
 "autopep8" = "*"

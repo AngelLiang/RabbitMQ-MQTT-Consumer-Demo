@@ -1,12 +1,18 @@
 # coding=utf-8
 
 import sys
-try:
-    import pika
-except Exception:
-    print('Please install pika')
-    print('pip install pika')
-    exit(0)
+import datetime as dt
+import pika
+
+from pymongo import MongoClient
+client = MongoClient('localhost', 27017)
+
+db = client['mqtt-log']
+mqtt_log = db['mqtt-log']
+
+# 是否日志MongoDB入库
+MONGDB_ENABLE = True
+
 
 HOST = '127.0.0.1'
 exchange_name = 'amq.topic'
@@ -33,7 +39,17 @@ for binding_key in binding_keys:
 
 
 def callback(ch, method, properties, body):
-    print(" [x] %r:%r" % (method.routing_key, body.decode()))
+    topic = method.routing_key.replace('.', '/')
+    payload = body.decode()
+    print(" [x] %r:%r" % (topic, payload))
+
+    if MONGDB_ENABLE:
+        log = {
+            'topic': topic,
+            'payload': payload,
+            'create_datetime': dt.datetime.now()
+        }
+        mqtt_log.insert_one(log)
 
 
 if __name__ == "__main__":
