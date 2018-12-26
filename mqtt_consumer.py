@@ -4,15 +4,21 @@ import sys
 import datetime as dt
 import pika
 
-from pymongo import MongoClient
-client = MongoClient('localhost', 27017)
-
-db = client['mqtt-log']
-mqtt_log = db['mqtt-log']
-
 # 是否日志MongoDB入库
-MONGDB_ENABLE = True
+MONGDB_ENABLE = False
 
+if MONGDB_ENABLE:
+    from pymongo import MongoClient
+    client = MongoClient('localhost', 27017)
+
+    db = client['mqtt-log']
+    mqtt_log = db['mqtt-log']
+
+INFLUXDB_ENABLE = True
+if INFLUXDB_ENABLE:
+    from influxdb import InfluxDBClient
+    client = InfluxDBClient('localhost', 8086, database='mqtt-log')
+    # client.create_database('mqtt-log')
 
 HOST = '127.0.0.1'
 exchange_name = 'amq.topic'
@@ -44,12 +50,34 @@ def callback(ch, method, properties, body):
     print(" [x] %r:%r" % (topic, payload))
 
     if MONGDB_ENABLE:
-        log = {
+        json_body = {
             'topic': topic,
             'payload': payload,
             'create_datetime': dt.datetime.now()
         }
-        mqtt_log.insert_one(log)
+        mqtt_log.insert_one(json_body)
+
+    if INFLUXDB_ENABLE:
+        json_body = [{
+            'measurement': 'mqtt-log',
+            # time字段，主索引，数据库会自动生成
+            # 'time': dt.datetime.utcnow(),
+
+            # tags：有索引的字段
+            "tags": {
+                "topic": topic,
+            },
+
+            # fileds： 没有索引的字段
+            "fields": {
+                'payload': payload,
+            }
+        }]
+        client.write_points(json_body)
+
+        # 查询过去3s的数据
+        # result = client.query("""SELECT * FROM "mqtt-log" WHERE time > now() - 3s AND "topic"='{topic}';""".format(topic=topic))
+        # print("Result: {0}".format(result))
 
 
 if __name__ == "__main__":
