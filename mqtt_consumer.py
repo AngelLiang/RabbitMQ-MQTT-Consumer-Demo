@@ -46,8 +46,11 @@ for binding_key in binding_keys:
 
 def callback(ch, method, properties, body):
     topic = method.routing_key.replace('.', '/')
-    payload = body.decode()
-    print(" [x] %r:%r" % (topic, payload))
+    if body:
+        payload = body.decode()
+    else:
+        payload = ''
+    # print(" [x] %r:%r" % (topic, payload))
 
     if MONGDB_ENABLE:
         json_body = {
